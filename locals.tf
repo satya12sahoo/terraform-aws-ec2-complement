@@ -7,7 +7,7 @@ locals {
   
   # Filter enabled instances
   enabled_instances = {
-    for k, v in local.merged_instances : k => v
+    for k, v in local.final_instances : k => v
     if v.enabled != false
   }
 }
