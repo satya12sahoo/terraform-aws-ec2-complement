@@ -1,6 +1,6 @@
 # Terraform AWS EC2 Instance Wrapper Module
 
-This is a wrapper module for the [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) module. It provides the same functionality as the original module but can be used as a child module in your Terraform configurations with support for creating multiple instances and default configurations.
+This is a wrapper module for the [terraform-aws-modules/ec2-instance/aws](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) module. It provides the same functionality as the original module but can be used as a child module in your Terraform configurations with support for creating multiple instances and default configurations.
 
 ## Features
 
