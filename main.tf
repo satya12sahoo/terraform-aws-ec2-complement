@@ -2,7 +2,7 @@
 # TERRAFORM AWS EC2 INSTANCE WRAPPER
 # =============================================================================
 #
-# This module is a wrapper around the terraform-aws-ec2-instance module that
+# This module is a wrapper around the terraform-aws-modules/ec2-instance/aws module that
 # provides enhanced functionality including:
 #
 # - Multiple instance creation with for_each
@@ -19,7 +19,6 @@
 #
 # The module is organized into separate sub-modules for better maintainability:
 #
-# - modules/iam/ - IAM roles and instance profiles
 # - modules/cloudwatch/ - CloudWatch logs and EventBridge
 # - modules/vpc-endpoints/ - VPC endpoints and security groups
 # - modules/load-balancer/ - ALB, target groups, and listeners
@@ -102,7 +101,7 @@ module "ec2_instances" {
   # EBS volumes
   ebs_volumes = each.value.ebs_volumes
 
-  # IAM configuration
+  # IAM configuration (handled by terraform-aws-modules/ec2-instance/aws)
   create_iam_instance_profile    = each.value.create_iam_instance_profile
   iam_role_name                  = each.value.iam_role_name
   iam_role_use_name_prefix       = each.value.iam_role_use_name_prefix
@@ -112,7 +111,7 @@ module "ec2_instances" {
   iam_role_policies              = each.value.iam_role_policies
   iam_role_tags                  = each.value.iam_role_tags
 
-  # IAM Instance Profile configuration
+  # IAM Instance Profile configuration (handled by terraform-aws-modules/ec2-instance/aws)
   create_instance_profile_for_existing_role = each.value.create_instance_profile_for_existing_role
   instance_profile_name = coalesce(
     each.value.instance_profile_name,
@@ -135,7 +134,7 @@ module "ec2_instances" {
     "Instance profile for ${each.key}"
   )
 
-  # Security group configuration
+  # Security group configuration (handled by terraform-aws-modules/ec2-instance/aws)
   create_security_group          = each.value.create_security_group
   security_group_name            = each.value.security_group_name
   security_group_use_name_prefix = each.value.security_group_use_name_prefix
@@ -145,7 +144,7 @@ module "ec2_instances" {
   security_group_egress_rules    = each.value.security_group_egress_rules
   security_group_ingress_rules   = each.value.security_group_ingress_rules
 
-  # Elastic IP configuration
+  # Elastic IP configuration (handled by terraform-aws-modules/ec2-instance/aws)
   create_eip = each.value.create_eip
   eip_domain = each.value.eip_domain
   eip_tags   = each.value.eip_tags
@@ -410,60 +409,4 @@ module "autoscaling" {
   common_tags = var.common_tags
 }
 
-# Call Security Groups module - one per instance
-module "security_groups" {
-  for_each = {
-    for k, v in local.enabled_instances : k => v
-    if v.create_security_group && v.subnet_id != null
-  }
-  source = "./modules/security-groups"
 
-  create_security_group = each.value.create_security_group
-  subnet_id = each.value.subnet_id
-  security_group_name = coalesce(
-    each.value.security_group_name,
-    "${var.name_prefix}${each.key}-sg"
-  )
-  security_group_description = coalesce(each.value.security_group_description, "Security group for instance ${each.key}")
-  security_group_tags = coalesce(each.value.security_group_tags, {})
-  security_group_egress_rules = coalesce(each.value.security_group_egress_rules, {})
-  security_group_ingress_rules = coalesce(each.value.security_group_ingress_rules, {})
-  vpc_id = each.value.vpc_id
-  security_group_revoke_rules_on_delete = coalesce(each.value.security_group_revoke_rules_on_delete, false)
-  default_egress_rule = coalesce(each.value.default_egress_rule, {
-    enabled = true
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-    description = "Allow all outbound traffic"
-  })
-  common_ingress_rules = coalesce(each.value.common_ingress_rules, [
-    {
-      from_port = 22
-      to_port = 22
-      protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "SSH access"
-    },
-    {
-      from_port = 80
-      to_port = 80
-      protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "HTTP access"
-    },
-    {
-      from_port = 443
-      to_port = 443
-      protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "HTTPS access"
-    }
-  ])
-  enable_common_ingress_rules = coalesce(each.value.enable_common_ingress_rules, true)
-  security_group_name_prefix = each.value.security_group_name_prefix
-  security_group_use_name_prefix = coalesce(each.value.security_group_use_name_prefix, false)
-  common_tags = var.common_tags
-}
