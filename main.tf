@@ -31,7 +31,8 @@
 # Call EC2 Instance module - one per instance
 module "ec2_instances" {
   for_each = local.enabled_instances
-  source = "github.com/satya12sahoo/terraform-aws-ec2-base//ec2-instance"
+  source = "terraform-aws-modules/ec2-instance/aws"
+  version = "~> 5.0"
 
   # Core variables
   create = each.value.create
