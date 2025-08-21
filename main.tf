@@ -185,7 +185,7 @@ module "cloudwatch" {
     false
   )
   
-  create_scheduling = each.value.create_scheduling
+  enable_scheduling = each.value.create_scheduling
   instance_name = each.value.name
   schedule_rule_name = each.value.create_scheduling ? "${var.name_prefix}${each.key}-schedule" : null
   schedule_expression = each.value.create_scheduling && each.value.schedule_config != null ? coalesce(
